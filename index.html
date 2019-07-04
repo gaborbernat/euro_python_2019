@@ -1,0 +1,1358 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+
+    <title>virtual environments</title>
+
+    <link href="css/reveal.css" rel="stylesheet">
+    <link href="css/theme/beige.css" rel="stylesheet">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link href="lib/css/atom-one-light.css" rel="stylesheet">
+    <link href="img/favicon.jpg" rel="shortcut icon">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+</head>
+<body>
+
+<div class="reveal">
+    <div class="slides">
+
+        <section>
+            <h2 style="margin: 0">status quo of virtual environments</h2>
+
+            <small>by <a href="https://github.com/gaborbernat">Bernat Gabor</a> /
+                <a href="https://twitter.com/gjbernat">@gjbernat</a> / Bloomberg
+            </small>
+            <br/>
+
+            <img alt="why" src="./img/tennis.jpg" style="max-height: 570px"/>
+        </section>
+
+        <section>
+            <h5>Who am I?</h5>
+            <div>
+                <ul>
+                    <li>Maintainer of the <a href="https://pypi.org/project/virtualenv">virtualenv tool</a></li>
+                    <li class="fragment">PyPa (Python Packaging Authority) member</li>
+
+                    <li class="fragment"><a href="https://github.com/gaborbernat">github/gaborbernat</a></li>
+                    <li class="fragment">Maintainer of the <a href="https://pypi.org/project/tox">tox</a> tool</li>
+
+                    <li class="fragment">Software Engineer at Bloomberg</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>What is a virtual environment? - <a href="https://www.python.org/dev/peps/pep-0405/">PEP-405</a></h2>
+            <ul>
+                <i>isolated python environment</i>
+                <div style="color: darkred">
+                    <li class="fragment">access to its own site-package</li>
+                    <li class="fragment">
+                        <ul><b>shares access to host</b>
+                            <li>built-ins</li>
+                            <li>standard library</li>
+                        </ul>
+                    </li>
+                    <li class="fragment">optionally isolated from the system site package</li>
+                </div>
+            </ul>
+        </section>
+
+        <section>
+            <h2>What? 😲 Why?</h2>
+            <img alt="why" src="./img/bag_nice.jpg" style="max-height: 570px;"/>
+        </section>
+
+        <section>
+            <h2>How do you get hold of a module in Python</h2>
+            <img alt="why" class="fragment" src="./img/python.png" style="max-height: 570px;"/>
+            <p style="font-size: 12px; margin: 0 0;"><a href="https://creativecommons.org/">&copy;Creative Commons CC0
+                1.0</a></p>
+
+        </section>
+
+        <section>
+            <h2>import</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>not all modules are equal</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+<div class="fragment">>>> import sys
+>>> sys
+    &lt;module 'sys' (built-in)&gt;</div>
+<div class="fragment">>>> import os
+>>> os
+    &lt;module 'os' from '/opt/python3.7/lib/python3.7/os.py'&gt;</div>
+<div class="fragment">>>> import _csv
+>>> _csv
+&lt;module '_csv' from '/opt/python3.7lib/python3.7/lib-dynload/_csv.cpython-37dm-darwin.so'&gt;</div>
+<div class="fragment">>>> import pytoml
+>>> pytoml
+&lt;module 'pytoml' from '/opt/python3.7/lib/python3.7/site-packages/pytoml/__init__.py'&gt;</div>
+<div class="fragment">>>> import pep517
+>>> pep517
+    &lt;module 'pep517' from '/Users/bernat/.local/lib/python3.7/site-packages/pep517/__init__.py'&gt;</div><br></code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>not all modules are equal</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+<mark>>>> import sys
+>>> sys
+    &lt;module 'sys' (built-in)&gt;</mark>
+<span style="color: black; background-color: mediumseagreen"><b>builtin module</b></span>
+<div>>>> import os
+>>> os
+    &lt;module 'os' from '/opt/python3.7/lib/python3.7/os.py'&gt;</div>
+<div>>>> import _csv
+>>> _csv
+&lt;module '_csv' from '/opt/python3.7lib/python3.7/lib-dynload/_csv.cpython-37dm-darwin.so'&gt;</div>
+<div>>>> import pytoml
+>>> pytoml
+&lt;module 'pytoml' from '/opt/python3.7/lib/python3.7/site-packages/pytoml/__init__.py'&gt;</div>
+<div>>>> import pep517
+>>> pep517
+    &lt;module 'pep517' from '/Users/bernat/.local/lib/python3.7/site-packages/pep517/__init__.py'&gt;</div><br></code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>not all modules are equal</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+<div>>>> import sys
+>>> sys
+    &lt;module 'sys' (built-in)&gt;</div>
+<mark>>>> import os
+>>> os
+    &lt;module 'os' from '/opt/python3.7/lib/python3.7/os.py'&gt;</mark>
+<span style="color: black; background-color: mediumseagreen"><b>standard library module</b></span>
+<div>>>> import _csv
+>>> _csv
+&lt;module '_csv' from '/opt/python3.7lib/python3.7/lib-dynload/_csv.cpython-37dm-darwin.so'&gt;</div>
+<div>>>> import pytoml
+>>> pytoml
+&lt;module 'pytoml' from '/opt/python3.7/lib/python3.7/site-packages/pytoml/__init__.py'&gt;</div>
+<div>>>> import pep517
+>>> pep517
+    &lt;module 'pep517' from '/Users/bernat/.local/lib/python3.7/site-packages/pep517/__init__.py'&gt;</div><br></code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>not all modules are equal</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+<div>>>> import sys
+>>> sys
+    &lt;module 'sys' (built-in)&gt;</div>
+<div>>>> import os
+>>> os
+    &lt;module 'os' from '/opt/python3.7/lib/python3.7/os.py'&gt;</div>
+<mark>>>> import _csv
+>>> _csv
+&lt;module '_csv' from '/opt/python3.7lib/python3.7/lib-dynload/_csv.cpython-37dm-darwin.so'&gt;</mark>
+<span style="color: black; background-color: mediumseagreen"><b>standard library dynamic load module</b></span>
+<div>>>> import pytoml
+>>> pytoml
+&lt;module 'pytoml' from '/opt/python3.7/lib/python3.7/site-packages/pytoml/__init__.py'&gt;</div>
+<div>>>> import pep517
+>>> pep517
+    &lt;module 'pep517' from '/Users/bernat/.local/lib/python3.7/site-packages/pep517/__init__.py'&gt;</div><br></code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>not all modules are equal</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+<div>>>> import sys
+>>> sys
+    &lt;module 'sys' (built-in)&gt;</div>
+<div>>>> import os
+>>> os
+    &lt;module 'os' from '/opt/python3.7/lib/python3.7/os.py'&gt;</div>
+<div>>>> import _csv
+>>> _csv
+&lt;module '_csv' from '/opt/python3.7lib/python3.7/lib-dynload/_csv.cpython-37dm-darwin.so'&gt;</div>
+<mark>>>> import pytoml
+>>> pytoml
+&lt;module 'pytoml' from '/opt/python3.7/lib/python3.7/site-packages/pytoml/__init__.py'&gt;</mark>
+<span style="color: black; background-color: mediumseagreen"><b>global site package module</b></span>
+<div>>>> import pep517
+>>> pep517
+    &lt;module 'pep517' from '/Users/bernat/.local/lib/python3.7/site-packages/pep517/__init__.py'&gt;</div><br></code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>not all modules are equal</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+<div>>>> import sys
+>>> sys
+    &lt;module 'sys' (built-in)&gt;</div>
+<div>>>> import os
+>>> os
+    &lt;module 'os' from '/opt/python3.7/lib/python3.7/os.py'&gt;</div>
+<div>>>> import _csv
+>>> _csv
+&lt;module '_csv' from '/opt/python3.7lib/python3.7/lib-dynload/_csv.cpython-37dm-darwin.so'&gt;</div>
+<div>>>> import pytoml
+>>> pytoml
+&lt;module 'pytoml' from '/opt/python3.7/lib/python3.7/site-packages/pytoml/__init__.py'&gt;</div>
+<mark>>>> import pep517
+>>> pep517
+    &lt;module 'pep517' from '/Users/bernat/.local/lib/python3.7/site-packages/pep517/__init__.py'&gt;</mark>
+<span style="color: black; background-color: mediumseagreen"><b>user site package module</b></span></code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>the import system - importers</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+</code>
+                    </pre>
+
+            <pre class="fragment" style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.meta_path:
+...     print(repr(importer))
+...
+&lt;class '_frozen_importlib.BuiltinImporter'&gt;
+&lt;class '_frozen_importlib.FrozenImporter'&gt;
+&lt;class '_frozen_importlib_external.PathFinder'&gt;
+</code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>the import system - built-in</h2>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.meta_path:
+...     print(repr(importer))
+...
+<mark>&lt;class '_frozen_importlib.BuiltinImporter'&gt;</mark>
+&lt;class '_frozen_importlib.FrozenImporter'&gt;
+&lt;class '_frozen_importlib_external.PathFinder'&gt;
+</code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>the import system - frozen</h2>
+
+            <p><a href="https://wiki.python.org/moin/Freeze">freeze tool</a>, <a
+                    href="https://pyinstaller.readthedocs.io/en/v3.3.1/when-things-go-wrong.html">pyinstaller</a>, etc
+            </p>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import os
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.meta_path:
+...     print(repr(importer))
+...
+&lt;class '_frozen_importlib.BuiltinImporter'&gt;
+<mark>&lt;class '_frozen_importlib.FrozenImporter'&gt;</mark>
+&lt;class '_frozen_importlib_external.PathFinder'&gt;
+</code>
+                    </pre>
+        </section>
+
+        <section>
+            <h2>the import system - path finder</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import os
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.meta_path:
+...     print(repr(importer))
+...
+&lt;class '_frozen_importlib.BuiltinImporter'&gt;
+&lt;class '_frozen_importlib.FrozenImporter'&gt;
+<mark>&lt;class '_frozen_importlib_external.PathFinder'&gt;</mark>
+</code> </pre>
+        </section>
+
+        <section>
+            <h2>the import system - path finder</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import os
+
+<mark>&lt;class '_frozen_importlib_external.PathFinder'&gt;</mark>
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+/opt/python3.7/lib/python37.zip
+/opt/python3.7/lib/python3.7
+/opt/python3.7/lib/python3.7/lib-dynload
+/Users/bernat/.local/lib/python3.7/site-packages
+/opt/python3.7/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+
+        <section>
+            <h2>the import system - path finder</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import os
+
+<mark>&lt;class '_frozen_importlib_external.PathFinder'&gt;</mark>
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7/lib/python37.zip</mark> <span style="color: black; background-color: mediumseagreen">standard library zipped</span>
+/opt/python3.7/lib/python3.7
+/opt/python3.7/lib/python3.7/lib-dynload
+/Users/bernat/.local/lib/python3.7/site-packages
+/opt/python3.7/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+
+
+        <section>
+            <h2>the import system - path finder</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import os
+&lt;module 'os' from '/opt/python3.7lib/python3.7/os.py'&gt;
+<mark>&lt;class '_frozen_importlib_external.PathFinder'&gt;</mark>
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+/opt/python3.7/lib/python37.zip
+<mark>/opt/python3.7/lib/python3.7</mark> <span style="color: black; background-color: mediumseagreen">standard library directory</span>
+/opt/python3.7/lib/python3.7/lib-dynload
+/Users/bernat/.local/lib/python3.7/site-packages
+/opt/python3.7/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+
+        <section>
+            <h2>the import system - path finder</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import _csv
+&lt;module '_csv' from '/opt/python3.7lib/python3.7/lib-dynload/_csv.cpython-37dm-darwin.so'&gt;
+<mark>&lt;class '_frozen_importlib_external.PathFinder'&gt;</mark>
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+/opt/python3.7/lib/python37.zip
+/opt/python3.7/lib/python3.7
+<mark>/opt/python3.7/lib/python3.7/lib-dynload</mark> <span style="color: black; background-color: mediumseagreen">standard library c-extensions</span>
+/Users/bernat/.local/lib/python3.7/site-packages
+/opt/python3.7/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+
+        <section>
+            <h2>the import system - path finder</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import pytoml
+&lt;module 'pytoml' from '/opt/python3.7lib/python3.7/site-packages/pytoml/__init__.py'&gt;
+<mark>&lt;class '_frozen_importlib_external.PathFinder'&gt;</mark>
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+/opt/python3.7/lib/python37.zip
+/opt/python3.7/lib/python3.7
+/opt/python3.7/lib/python3.7/lib-dynload
+<mark>/Users/bernat/.local/lib/python3.7/site-packages</mark> <span
+                            style="color: black; background-color: mediumseagreen">global site package</span>
+/opt/python3.7/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+
+        <section>
+            <h2>the import system - path finder</h2>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> pep517
+&lt;module 'pep517' from '/Users/bernat/.local/lib/python3.7/site-packages/pep517/__init__.py'&gt;
+<mark>&lt;class '_frozen_importlib_external.PathFinder'&gt;</mark>
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+/opt/python3.7/lib/python37.zip
+/opt/python3.7/lib/python3.7
+/opt/python3.7/lib/python3.7/lib-dynload
+/Users/bernat/.local/lib/python3.7/site-packages
+<mark>/opt/python3.7/lib/python3.7/site-packages</mark> <span style="color: black; background-color: mediumseagreen">user site package</span>
+</code> </pre>
+        </section>
+
+        <section>
+            <h2>What is a virtual environment? - <a href="https://www.python.org/dev/peps/pep-0405/">PEP-405</a></h2>
+            <ul>
+                <i>isolated python environment</i>
+                <div style="color: darkred">
+                    <li>access to its own site-package</li>
+                    <li>
+                        <ul><b>shares access to host</b>
+                            <li>built-ins</li>
+                            <li>standard library</li>
+                        </ul>
+                    </li>
+                    <li>optionally isolated from the system site package</li>
+                </div>
+            </ul>
+        </section>
+
+        <section>
+            <h4>System python paths</h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7/lib/python37.zip</mark> <span style="color: black; background-color: mediumseagreen">standard library zipped</span>
+<mark>/opt/python3.7/lib/python3.7</mark> <span
+                            style="color: black; background-color: mediumseagreen">standard library</span>
+<mark>/opt/python3.7/lib/python3.7/lib-dynload</mark> <span style="color: black; background-color: mediumseagreen">standard library c-extension</span>
+
+<mark>/Users/bernat/.local/lib/python3.7/site-packages</mark> <span
+                            style="color: black; background-color: mediumseagreen">global site package</span>
+<mark>/opt/python3.7/lib/python3.7/site-packages</mark> <span style="color: black; background-color: mediumseagreen">user site package</span>
+</code> </pre>
+        </section>
+
+        <section>
+            <h4>virtual environment python paths - no global access</h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/Users/bernat/env/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7/lib/python37.zip</mark> <span style="color: black; background-color: mediumseagreen">standard library zipped</span>
+<mark>/opt/python3.7/lib/python3.7</mark> <span
+                            style="color: black; background-color: mediumseagreen">standard library</span>
+<mark>/opt/python3.7/lib/python3.7/lib-dynload</mark> <span style="color: black; background-color: mediumseagreen">standard library c-extension</span>
+<mark>/Users/bernat/env/lib/python3.7/site-package</mark> <span style="color: black; background-color: mediumseagreen">OWN site package</span>
+
+
+</code> </pre>
+        </section>
+
+        <section>
+            <h4>virtual environment python paths - global access</h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/Users/bernat/env/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7/lib/python37.zip</mark> <span style="color: black; background-color: mediumseagreen">standard library zipped</span>
+<mark>/opt/python3.7/lib/python3.7</mark> <span
+                            style="color: black; background-color: mediumseagreen">standard library</span>
+<mark>/opt/python3.7/lib/python3.7/lib-dynload</mark> <span style="color: black; background-color: mediumseagreen">standard library c-extension</span>
+<mark>/Users/bernat/env/lib/python3.7/site-package</mark> <span style="color: black; background-color: mediumseagreen">OWN site package</span>
+<mark>/Users/bernat/.local/lib/python3.7/site-packages</mark> <span
+                            style="color: black; background-color: mediumseagreen">global site package</span>
+<mark>/opt/python3.7/lib/python3.7/site-packages</mark> <span style="color: black; background-color: mediumseagreen">user site package</span>
+</code> </pre>
+        </section>
+
+        <section>
+            <h4>System python paths</h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7/lib/python37.zip</mark> <span style="color: black; background-color: mediumseagreen">standard library zipped</span>
+<mark>/opt/python3.7/lib/python3.7</mark> <span
+                            style="color: black; background-color: mediumseagreen">standard library</span>
+<mark>/opt/python3.7/lib/python3.7/lib-dynload</mark> <span style="color: black; background-color: mediumseagreen">standard library c-extension</span>
+
+<mark>/Users/bernat/.local/lib/python3.7/site-packages</mark> <span
+                            style="color: black; background-color: mediumseagreen">global site package</span>
+<mark>/opt/python3.7/lib/python3.7/site-packages</mark> <span style="color: black; background-color: mediumseagreen">user site package</span>
+</code> </pre>
+        </section>
+
+        <section>
+            <h2>WHY?</h2>
+            <ul>
+                <li class="fragment">install without system administrator rights</li>
+                <li class="fragment">package install without influencing system python</li>
+                <li class="fragment">create easy to reproduce test environments</li>
+                <li class="fragment">easier dependency management</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>HOW?</h2>
+            <img data-src="img/cute_heart.jpg" style="max-height: 600px;"/>
+        </section>
+
+
+        <section>
+            <h4>sys.path - who comes up with this list?</h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7/lib/python37.zip</mark>
+<mark>/opt/python3.7/lib/python3.7</mark>
+<mark>/opt/python3.7/lib/python3.7/lib-dynload</mark>
+<mark>/Users/bernat/env/lib/python3.7/site-package</mark>
+<mark>/Users/bernat/.local/lib/python3.7/site-packages</mark>
+<mark>/opt/python3.7/lib/python3.7/site-packages</mark>
+</code> </pre>
+        </section>
+
+        <section>
+            <h4>sys.path - who comes up with this list? - <a
+                    href="https://github.com/python/cpython/blob/master/Modules/getpath.c#L1033">standard</a> <a
+                    href="https://github.com/python/cpython/blob/master/Modules/main.c#L139">library</a></h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7/lib/python37.zip</mark>
+<mark>/opt/python3.7/lib/python3.7</mark>
+<mark>/opt/python3.7/lib/python3.7/lib-dynload</mark>
+/Users/bernat/env/lib/python3.7/site-package
+/Users/bernat/.local/lib/python3.7/site-packages
+/opt/python3.7/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+
+        <section>
+            <h4>sys.path - who comes up with this list? - <a
+                    href="https://github.com/python/cpython/blob/master/Lib/site.py">site.py</a></h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+/opt/python3.7/lib/python37.zip
+/opt/python3.7/lib/python3.7
+/opt/python3.7/lib/python3.7/lib-dynload
+<mark>/Users/bernat/env/lib/python3.7/site-package</mark>
+<mark>/Users/bernat/.local/lib/python3.7/site-packages</mark>
+<mark>/opt/python3.7/lib/python3.7/site-packages</mark>
+</code> </pre>
+        </section>
+
+        <section>
+            <h4>sys.path - who comes up with this list?</h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>/opt/python3.7</mark>/lib/python37.zip
+<mark>/opt/python3.7</mark>/lib/python3.7
+<mark>/opt/python3.7</mark>/lib/python3.7/lib-dynload
+/Users/bernat/env/lib/python3.7/site-package
+/Users/bernat/.local/lib/python3.7/site-packages
+<mark>/opt/python3.7</mark>/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+
+        <section>
+            <h4>sys.path - who comes up with this list?</h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.executable
+/opt/python3.7/bin/python
+</code>
+                    </pre>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+Python 3.7.4rc1+ (heads/3.7:887e0576b8, Jun 21 2019, 12:20:59)
+[Clang 10.0.1 (clang-1001.0.46.4)] on darwin
+
+>>> import sys
+>>> for importer in sys.path:
+...     print(repr(path))
+...
+<mark>sys.prefix + </mark>/lib/python37.zip
+<mark>sys.prefix + </mark>/lib/python3.7
+<mark>sys.exec_prefix + </mark>/lib/python3.7/lib-dynload
+env_home + /lib/python3.7/site-package
+user_home + /lib/python3.7/site-packages
+<mark>sys.prefix + </mark>/lib/python3.7/site-packages
+</code> </pre>
+        </section>
+        <section>
+            <h4>sys.prefix - who comes up with this? - <a
+                    href="https://github.com/python/cpython/blob/master/Modules/getpath.c#L1">getpath.c</a></h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.prefix
+/opt/python3.7
+</code>
+                    </pre>
+            <ul>
+                <li class="fragment">if <i style="color: darkred">PYTHONHOME</i> set, use that</li>
+                <li class="fragment">otherwise, find landmark starting at executable path<br>
+                    <i style="color: darkred">lib/pythonX.X/os.py</i></li>
+                <li class="fragment">otherwise, use build time hardcoded value</li>
+            </ul>
+
+        </section>
+
+        <section>
+            <h4>sys.exec_prefix - who comes up with this? - <a
+                    href="https://github.com/python/cpython/blob/master/Modules/getpath.c#L1">getpath.c</a></h4>
+
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+>>> import sys
+>>> sys.exec_prefix
+/opt/python3.7
+</code>
+                    </pre>
+
+            <ul>
+                <li>if <i style="color: darkred">PYTHONHOME</i> set, use that</li>
+                <li>otherwise, find landmark starting at executable path<br>
+                    <i style="color: darkred">lib/pythonX.X/lib-dynload</i></li>
+                <li>otherwise, use build time hardcoded value</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>and we're done</h2>
+            <img data-src="img/sleep.jpg" style="max-height: 460px;"/>
+        </section>
+
+        <section>
+            <h2>How to create a virtual environment?</h2>
+            <ul>
+                <i>isolated python environment</i>
+                <div style="color: darkred">
+                    <li class="fragment">
+                        <ul><b>shares access to host</b>
+                            <li>built-ins</li>
+                            <li>standard library</li>
+                        </ul>
+                        <span class="fragment" style="color: grey">ensure landmarks exists relative to python executable path</span>
+                    </li>
+                    <li class="fragment">optionally isolated from the system site package</li>
+                    <span class="fragment" style="color: grey">conditional logic for site.py</span>
+                    <li class="fragment">access to its own site-package</li>
+                    <span class="fragment" style="color: grey">logic for site.py - add it if virtualenv</clspan>
+                </div>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Changes needed for virtual environment support in python?</h3>
+            <ul>
+                <li class="fragment">standard library discovery - if python copied (keep track of host)</li>
+                <li class="fragment">site.py
+                    <ul>
+                        <li>flag for adding the system site package</li>
+                        <li class="fragment">flag if in virtual environment</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>pyvenv.cfg - Python 3 - PEP-405</h3>
+            <pre style="font-size: 0.35em; width:80em">
+                    <code class="lang-python" data-noescape>
+home = /opt
+include-system-site-packages = false
+version = 3.7.4
+</code> </pre>
+            <ul>
+                <li class="fragment">standard library discovery - if python copied (keep track of host)</li>
+                <li class="fragment">site.py
+                    <ul>
+                        <li>flag for adding the system site package</li>
+                        <li class="fragment">flag if in virtual environment</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Bootstrap - You no pip?</h2>
+            <ul>
+                <li class="fragment">How we install packages - via pip!</li>
+                <li class="fragment">catch 22 - don't have pip installed to install pip</li>
+                <li class="fragment">solution:
+                    <ul>
+                        <li class="fragment">get a wheel/zipapp of pip (can be bundled)</li>
+                        <li class="fragment">put the wheel/zipapp onto the sys.path - PYTHONPATH</li>
+                        <li class="fragment">self install</li>
+                    </ul>
+                </li>
+                <li class="fragment"><a href="https://docs.python.org/3/library/ensurepip.html">ensurepip</a></li>
+            </ul>
+        </section>
+
+        <section>
+            <img alt="why" src="./img/beach.jpg" style="max-height: 700px"/>
+        </section>
+
+        <section>
+            <h2>Implementations</h2>
+            <a href="https://docs.python.org/3/library/venv.html">venv -
+                https://docs.python.org/3/library/venv.html</a>
+            <ul>
+                <li class="fragment">Python 3.3+ only</li>
+                <li class="fragment">part of the standard library for the python implementation</li>
+                <li class="fragment">target itself only - 3.6 can only create environments for 3.6</li>
+                <li class="fragment">uses ensurepip to bootstrap pip/setuptools/wheel - offline only</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Implementations</h2>
+            <a href="https://virtualenv.pypa.io/en/latest/">virtualenv - https://virtualenv.pypa.io/en/latest</a>
+            <ul>
+                <li class="fragment">third party package - out of band upgrade</li>
+                <li class="fragment">full Python 2 and 3 support</li>
+                <li class="fragment">CPython and PyPy support (open for IronPython, Jython, etc)</li>
+                <li class="fragment">cross python support</li>
+                <li class="fragment">cross platform support</li>
+                <li class="fragment">built-in interpreter discovery - <a
+                        href="https://www.python.org/dev/peps/pep-0514/">PEP-504 Windows</a>, <a
+                        href="https://www.python.org/dev/peps/pep-0394/">PEP-394 POSIX</a></li>
+                <li class="fragment">uses bundled pip/setuptools/wheel to bootstrap, can use index server</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>virtualenv internals</h2>
+            <img alt="why" src="./img/sun.jpg" style="max-height: 600px"/>
+        </section>
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            <ul>Python 2 does not support pyvenv.cfg, need another way too
+                <li>alter standard library discovery</li>
+                <li>alter site.py logic</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            <b>always</b> copy installer to force discovery start from here
+            <pre style="font-size: 0.35em; width:80em">
+                        <code class="lang-python" data-noescape>
+    env2.7/
+    └── bin
+        └── <mark>python2.7</mark>
+
+
+
+
+
+
+
+
+
+    </code> </pre>
+        </section>
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            ensure <b>sys.prefix and sys.exec_prefix</b> landmark files are available
+            <pre style="font-size: 0.35em; width:80em">
+                        <code class="lang-python" data-noescape>
+    env2.7/
+    ├── bin
+    │   └── python2.7
+    └── lib
+        └── python2.7
+            ├── <mark>lib-dynload -> /opt/python2.7/lib/python2.7/lib-dynload</mark>
+            └── <mark>os.py -> /opt/python2.7/lib/python2.7/os.py</mark>
+
+
+
+
+
+    </code> </pre>
+        </section>
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            add custom <b>site.py</b> to fix things - inject host stdlib, global site, our site
+            <pre style="font-size: 0.35em; width:80em">
+                        <code class="lang-python" data-noescape>
+    env2.7/
+    ├── bin
+    │   └── python2.7
+    └── lib
+        └── python2.7
+            ├── lib-dynload -> /opt/python2.7/lib/python2.7/lib-dynload
+            ├── <mark>no-global-site-packages.txt</mark>
+            ├── os.py -> /opt/python2.7/lib/python2.7/os.py
+            ├── <mark>orig-prefix.txt</mark>
+            ├── <mark>site-packages</mark>
+            └── <mark>site.py</mark>
+
+    </code> </pre>
+        </section>
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            site.py imports a few stuff, these need to be there - link them in
+            <pre style="font-size: 0.3em; width:80em">
+                        <code class="lang-python" data-noescape style="max-height: 600px">
+env2.7/
+├── bin
+│   └── python2.7
+└── lib
+    └── python2.7
+        <mark>├── UserDict.py -> /opt/python2.7/lib/python2.7/UserDict.py</mark>
+        <mark>├── _abcoll.py -> /opt/python2.7/lib/python2.7/_abcoll.py</mark>
+        <mark>├── _weakrefset.py -> /opt/python2.7/lib/python2.7/_weakrefset.py</mark>
+        <mark>├── abc.py -> /opt/python2.7/lib/python2.7/abc.py</mark>
+        <mark>├── codecs.py -> /opt/python2.7/lib/python2.7/codecs.py</mark>
+        <mark>├── copy_reg.py -> /opt/python2.7/lib/python2.7/copy_reg.py</mark>
+        <mark>├── encodings -> /opt/python2.7/lib/python2.7/encodings</mark>
+        <mark>├── fnmatch.py -> /opt/python2.7/lib/python2.7/fnmatch.py</mark>
+        <mark>├── genericpath.py -> /opt/python2.7/lib/python2.7/genericpath.py</mark>
+        ├── lib-dynload -> /opt/python2.7/lib/python2.7/lib-dynload
+        <mark>├── linecache.py -> /opt/python2.7/lib/python2.7/linecache.py</mark>
+        <mark>├── locale.py -> /opt/python2.7/lib/python2.7/locale.py</mark>
+        ├── no-global-site-packages.txt
+        <mark>├── ntpath.py -> /opt/python2.7/lib/python2.7/ntpath.py</mark>
+        ├── orig-prefix.txt
+        ├── os.py -> /opt/python2.7/lib/python2.7/os.py
+        <mark>├── posixpath.py -> /opt/python2.7/lib/python2.7/posixpath.py</mark>
+        <mark>├── re.py -> /opt/python2.7/lib/python2.7/re.py</mark>
+        ├── site-packages
+        ├── site.py
+        <mark>├── sre.py -> /opt/python2.7/lib/python2.7/sre.py</mark>
+        <mark>├── sre_compile.py -> /opt/python2.7/lib/python2.7/sre_compile.py</mark>
+        <mark>├── sre_constants.py -> /opt/python2.7/lib/python2.7/sre_constants.py</mark>
+        <mark>├── sre_parse.py -> /opt/python2.7/lib/python2.7/sre_parse.py</mark>
+        <mark>├── stat.py -> /opt/python2.7/lib/python2.7/stat.py</mark>
+        <mark>├── types.py -> /opt/python2.7/lib/python2.7/types.py</mark>
+        <mark>└── warnings.py -> /opt/python2.7/lib/python2.7/warnings.py</mark>
+    </code> </pre>
+        </section>
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            site.py imports a <b> few stuff: 21... </b> Not Great...Not Terrible.
+            <pre style="font-size: 0.3em; width:80em">
+                        <code class="lang-python" data-noescape style="max-height: 600px">
+env2.7/
+├── bin
+│   └── python2.7
+└── lib
+    └── python2.7
+        <mark>├── UserDict.py -> /opt/python2.7/lib/python2.7/UserDict.py</mark>
+        <mark>├── _abcoll.py -> /opt/python2.7/lib/python2.7/_abcoll.py</mark>
+        <mark>├── _weakrefset.py -> /opt/python2.7/lib/python2.7/_weakrefset.py</mark>
+        <mark>├── abc.py -> /opt/python2.7/lib/python2.7/abc.py</mark>
+        <mark>├── codecs.py -> /opt/python2.7/lib/python2.7/codecs.py</mark>
+        <mark>├── copy_reg.py -> /opt/python2.7/lib/python2.7/copy_reg.py</mark>
+        <mark>├── encodings -> /opt/python2.7/lib/python2.7/encodings</mark>
+        <mark>├── fnmatch.py -> /opt/python2.7/lib/python2.7/fnmatch.py</mark>
+        <mark>├── genericpath.py -> /opt/python2.7/lib/python2.7/genericpath.py</mark>
+        ├── lib-dynload -> /opt/python2.7/lib/python2.7/lib-dynload
+        <mark>├── linecache.py -> /opt/python2.7/lib/python2.7/linecache.py</mark>
+        <mark>├── locale.py -> /opt/python2.7/lib/python2.7/locale.py</mark>
+        ├── no-global-site-packages.txt
+        <mark>├── ntpath.py -> /opt/python2.7/lib/python2.7/ntpath.py</mark>
+        ├── orig-prefix.txt
+        ├── os.py -> /opt/python2.7/lib/python2.7/os.py
+        <mark>├── posixpath.py -> /opt/python2.7/lib/python2.7/posixpath.py</mark>
+        <mark>├── re.py -> /opt/python2.7/lib/python2.7/re.py</mark>
+        ├── site-packages
+        ├── site.py
+        <mark>├── sre.py -> /opt/python2.7/lib/python2.7/sre.py</mark>
+        <mark>├── sre_compile.py -> /opt/python2.7/lib/python2.7/sre_compile.py</mark>
+        <mark>├── sre_constants.py -> /opt/python2.7/lib/python2.7/sre_constants.py</mark>
+        <mark>├── sre_parse.py -> /opt/python2.7/lib/python2.7/sre_parse.py</mark>
+        <mark>├── stat.py -> /opt/python2.7/lib/python2.7/stat.py</mark>
+        <mark>├── types.py -> /opt/python2.7/lib/python2.7/types.py</mark>
+        <mark>└── warnings.py -> /opt/python2.7/lib/python2.7/warnings.py</mark>
+    </code> </pre>
+        </section>
+
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            add activation scripts, <span class="fragment">include,</span><span class="fragment">distutils,</span><span
+                class="fragment">fix all bugs (tlk, platform specific)</span>
+            <pre style="font-size: 0.25em; width:80em">
+                        <code class="lang-python" data-noescape style="max-height: 600px">
+env2.7/
+├── bin
+│   ├── <mark>activate</mark>
+│   ├── <mark>activate.csh</mark>
+│   ├── <mark>activate.fish</mark>
+│   ├── <mark>activate.ps1</mark>
+│   ├── <mark>activate_this.py</mark>
+│   ├── <mark>python -> python2.7</mark>
+│   ├── <mark>python-config</mark>
+│   ├── <mark>python2 -> python2.7</mark>
+│   └── python2.7
+├── <mark>include</mark>
+│   └── <mark>python2.7 -> /opt/python2.7/include/python2.7</mark>
+└── lib
+    └── python2.7
+        ├── <mark>LICENSE.txt -> /opt/python2.7/lib/python3.7/LICENSE.txt</mark>
+        ├── UserDict.py -> /opt/python2.7/lib/python2.7/UserDict.py
+        ├── _abcoll.py -> /opt/python2.7/lib/python2.7/_abcoll.py
+        ├── _weakrefset.py -> /opt/python2.7/lib/python2.7/_weakrefset.py
+        ├── abc.py -> /opt/python2.7/lib/python2.7/abc.py
+        ├── codecs.py -> /opt/python2.7/lib/python2.7/codecs.py
+        ├── copy_reg.py -> /opt/python2.7/lib/python2.7/copy_reg.py
+        ├── <mark>distutils</mark>
+        │   ├── <mark>__init__.py</mark>
+        │   └── <mark>distutils.cfg</mark>
+        ├── encodings -> /opt/python2.7/lib/python2.7/encodings
+        ├── fnmatch.py -> /opt/python2.7/lib/python2.7/fnmatch.py
+        ├── genericpath.py -> /opt/python2.7/lib/python2.7/genericpath.py
+        ├── lib-dynload -> /opt/python2.7/lib/python2.7/lib-dynload
+        ├── linecache.py -> /opt/python2.7/lib/python2.7/linecache.py
+        ├── locale.py -> /opt/python2.7/lib/python2.7/locale.py
+        ├── ntpath.py -> /opt/python2.7/lib/python2.7/ntpath.py
+        ├── no-global-site-packages.txt
+        ├── orig-prefix.txt
+        ├── os.py -> /opt/python2.7/lib/python2.7/os.py
+        ├── posixpath.py -> /opt/python2.7/lib/python2.7/posixpath.py
+        ├── re.py -> /opt/python2.7/lib/python2.7/re.py
+        ├── site-packages
+        ├── site.py
+        ├── sre.py -> /opt/python2.7/lib/python2.7/sre.py
+        ├── sre_compile.py -> /opt/python2.7/lib/python2.7/sre_compile.py
+        ├── sre_constants.py -> /opt/python2.7/lib/python2.7/sre_constants.py
+        ├── sre_parse.py -> /opt/python2.7/lib/python2.7/sre_parse.py
+        ├── stat.py -> /opt/python2.7/lib/python2.7/stat.py
+        ├── types.py -> /opt/python2.7/lib/python2.7/types.py
+        └── warnings.py -> /opt/python2.7/lib/python2.7/warnings.py
+    </code> </pre>
+        </section>
+
+        <section>
+            <h2>done</h2>
+            <img data-src="img/tired.jpg"
+                 style="max-height: 600px;"/>
+
+        </section>
+
+        <section>
+            <h3>virtualenv internals - Ian Bicking's</h3>
+            <pre style="font-size: 0.25em; width:80em">
+                        <code class="lang-python" data-noescape style="max-height: 600px">
+env2.7/
+├── bin
+│   ├── activate
+│   ├── activate.csh
+│   ├── activate.fish
+│   ├── activate.ps1
+│   ├── activate_this.py
+│   ├── python -> python2.7
+│   ├── python-config
+│   ├── python2 -> python2.7
+│   └── python2.7
+├── include
+│   └── python2.7 -> /opt/python2.7/include/python2.7
+└── lib
+    └── python2.7
+        ├── LICENSE.txt -> /opt/python3.7/lib/python3.7/LICENSE.txt
+        ├── UserDict.py -> /opt/python2.7/lib/python2.7/UserDict.py
+        ├── _abcoll.py -> /opt/python2.7/lib/python2.7/_abcoll.py
+        ├── _weakrefset.py -> /opt/python2.7/lib/python2.7/_weakrefset.py
+        ├── abc.py -> /opt/python2.7/lib/python2.7/abc.py
+        ├── codecs.py -> /opt/python2.7/lib/python2.7/codecs.py
+        ├── copy_reg.py -> /opt/python2.7/lib/python2.7/copy_reg.py
+        ├── distutils
+        │   ├── __init__.py
+        │   └── distutils.cfg
+        ├── encodings -> /opt/python2.7/lib/python2.7/encodings
+        ├── fnmatch.py -> /opt/python2.7/lib/python2.7/fnmatch.py
+        ├── genericpath.py -> /opt/python2.7/lib/python2.7/genericpath.py
+        ├── lib-dynload -> /opt/python2.7/lib/python2.7/lib-dynload
+        ├── linecache.py -> /opt/python2.7/lib/python2.7/linecache.py
+        ├── locale.py -> /opt/python2.7/lib/python2.7/locale.py
+        ├── ntpath.py -> /opt/python2.7/lib/python2.7/ntpath.py
+        ├── no-global-site-packages.txt
+        ├── orig-prefix.txt
+        ├── os.py -> /opt/python2.7/lib/python2.7/os.py
+        ├── posixpath.py -> /opt/python2.7/lib/python2.7/posixpath.py
+        ├── re.py -> /opt/python2.7/lib/python2.7/re.py
+        <mark>├── site-packages</mark>
+        ├── site.py
+        ├── sre.py -> /opt/python2.7/lib/python2.7/sre.py
+        ├── sre_compile.py -> /opt/python2.7/lib/python2.7/sre_compile.py
+        ├── sre_constants.py -> /opt/python2.7/lib/python2.7/sre_constants.py
+        ├── sre_parse.py -> /opt/python2.7/lib/python2.7/sre_parse.py
+        ├── stat.py -> /opt/python2.7/lib/python2.7/stat.py
+        ├── types.py -> /opt/python2.7/lib/python2.7/types.py
+        └── warnings.py -> /opt/python2.7/lib/python2.7/warnings.py
+    </code> </pre>
+        </section>
+
+        <section>
+            <h3>venv world</h3>
+            <pre style="font-size: 0.3em; width:80em">
+                        <code class="lang-python" data-noescape style="max-height: 600px">
+env3.7
+├── bin
+│   ├── activate
+│   ├── activate.csh
+│   ├── activate.fish
+│   ├── python -> python3.7
+│   ├── python3 -> python3.7
+│   └── python3.7 -> /opt/python3.7
+├── include
+├── lib
+│   └── python3.7
+│       └── <mark>site-packages</mark>
+└── pyvenv.cfg
+
+5 directories, 7 files
+    </code> </pre>
+        </section>
+
+        <section>
+            <h4>virtualenv - <a href="https://github.com/pypa/virtualenv/issues/1366"> rewrite</a></h4>
+
+            proposal <a href="https://github.com/pypa/virtualenv/issues/1366">
+            https://github.com/pypa/virtualenv/issues/1366</a>
+            <ul>
+                <li class="fragment">third party package - offered via wheel and zipapp</li>
+                <li class="fragment">all python platforms welcomed</li>
+                <li class="fragment">two year grace period</li>
+                <li class="fragment">ability to select target python (-p 3, -p 3.7.4-64)</li>
+                <li class="fragment">prefer built-in venv</li>
+                <li class="fragment">broad shell activation support (+xonsh) - unified behaviour</li>
+                <li class="fragment">three layered config system - ini, environment variable, flags</li>
+                <li class="fragment">plugin system for extension</li>
+            </ul>
+
+        </section>
+
+
+        <section>
+            <h5 style="margin-bottom: 5px">thank you - questions</h5>
+            <img data-src="img/cut.jpg"
+                 style="max-height: 460px;"/>
+        </section>
+    </div>
+</div>
+
+<div style="position:absolute; bottom: 5px; right: 5px; width: 11.5em">
+    <p style="color: #767676; font-family: Helvetica, sans-serif; font-weight: bold; font-size: 1.3em; margin: 5px 0; text-align: center">
+        Bloomberg</p>
+    <p style="text-align: center; font-weight: bold; font-size: 0.5em; margin: 0 auto">
+        &copy; 2019 Bloomberg Finance L.P. - All rights reserved.</p>
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.js"></script>
+
+<script>
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    var role = getParameterByName('role');
+    role = role === 'master' ? role : 'client';
+
+    // More info https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        width: 1920,
+        height: 1080,
+        margin: 0.01,
+        transition: 'none',
+        transition_speed: 'fast',
+        fragmentInURL: true,
+        controls: false,
+        minScale: 0.45,
+        maxScale: 1.5,
+        history: true,
+        viewDistance: 100,
+        multiplex: {
+            secret: '15604385032487770017',
+            id: 'ac106df4fea471e1',
+            url: 'https://reveal-js-multiplex-ccjbegmaii.now.sh'
+        },
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+            {src: 'assets/lib/socket.io.min.js', async: true},
+            {src: 'plugin/multiplex/' + role + '.js', async: true},
+            {src: 'plugin/markdown/marked.js'},
+            {src: 'plugin/markdown/markdown.js'},
+            {src: 'plugin/notes/notes.js', async: true},
+            {
+                src: 'plugin/highlight/highlight.js', async: true, callback: function () {
+                    hljs.initHighlightingOnLoad();
+                }
+            }
+        ]
+    });
+</script>
+</body>
+</html>
